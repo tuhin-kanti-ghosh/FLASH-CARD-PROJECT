@@ -334,6 +334,186 @@ textarea:focus {
 }
 
 /* ============================================
+   PDF Upload Section
+   ============================================ */
+.pdf-upload-section {
+    margin-bottom: 1.5rem;
+}
+
+.upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--card-radius);
+    padding: 3rem 2rem;
+    text-align: center;
+    background-color: var(--bg-secondary);
+    transition: all var(--transition-normal);
+    cursor: pointer;
+}
+
+.upload-area:hover,
+.upload-area.drag-over {
+    border-color: var(--primary-color);
+    background-color: rgba(66, 133, 244, 0.05);
+}
+
+.upload-area .upload-icon {
+    font-size: 64px;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.upload-area h3 {
+    font-family: 'Google Sans', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.upload-area p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+}
+
+.upload-status {
+    background-color: var(--bg-secondary);
+    border-radius: var(--card-radius);
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.status-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.status-header .material-symbols-outlined {
+    color: var(--primary-color);
+    font-size: 28px;
+}
+
+.status-header span:last-child {
+    font-family: 'Google Sans', sans-serif;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.progress-container {
+    margin-bottom: 1rem;
+}
+
+.progress-bar-small {
+    height: 6px;
+    background-color: var(--bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill-small {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 3px;
+    transition: width var(--transition-normal);
+    width: 0%;
+}
+
+#extractStatus {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.uploaded-preview {
+    background-color: var(--bg-secondary);
+    border-radius: var(--card-radius);
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.preview-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.preview-header .material-symbols-outlined {
+    color: var(--secondary-color);
+    font-size: 24px;
+}
+
+.preview-header span:last-child {
+    font-family: 'Google Sans', sans-serif;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.uploaded-preview p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.preview-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.5rem 0;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.divider span {
+    padding: 0 1rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+}
+
+.btn-danger {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    opacity: 0.9;
+}
+
+.extracted-text-container {
+    margin: 1rem 0;
+}
+
+.extracted-text-container textarea {
+    min-height: 300px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.modal-large {
+    max-width: 800px;
+}
+
+/* ============================================
    Controls Section
    ============================================ */
 .controls-section {

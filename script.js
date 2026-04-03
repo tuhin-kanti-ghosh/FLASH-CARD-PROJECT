@@ -19,6 +19,8 @@ let flashcards = [];
 let currentStudyIndex = 0;
 let studiedCount = 0;
 let editCardId = null;
+let extractedPdfText = '';
+let isProcessingPdf = false;
 
 // ============================================
 // DOM Elements
@@ -130,12 +132,41 @@ function setupEventListeners() {
     // Theme toggle
     elements.themeToggle.addEventListener('click', toggleTheme);
     
+    // PDF Upload functionality
+    setupPdfUpload();
+    
+    // View extracted text modal
+    const viewExtractedBtn = document.getElementById('viewExtractedBtn');
+    const closeExtractedBtn = document.getElementById('closeExtractedBtn');
+    const closeExtractedActionBtn = document.getElementById('closeExtractedActionBtn');
+    const copyExtractedBtn = document.getElementById('copyExtractedBtn');
+    const extractedTextModal = document.getElementById('extractedTextModal');
+    
+    if (viewExtractedBtn) {
+        viewExtractedBtn.addEventListener('click', () => {
+            document.getElementById('extractedTextContent').value = extractedPdfText;
+            extractedTextModal.classList.add('show');
+        });
+    }
+    
+    if (closeExtractedBtn) closeExtractedBtn.addEventListener('click', () => extractedTextModal.classList.remove('show'));
+    if (closeExtractedActionBtn) closeExtractedActionBtn.addEventListener('click', () => extractedTextModal.classList.remove('show'));
+    if (copyExtractedBtn) {
+        copyExtractedBtn.addEventListener('click', () => {
+            const textarea = document.getElementById('extractedTextContent');
+            textarea.select();
+            document.execCommand('copy');
+            showToast('Text copied to clipboard!');
+        });
+    }
+    
     // Close modals on overlay click
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
                 closeStudyMode();
                 closeEditModal();
+                extractedTextModal.classList.remove('show');
             }
         });
     });
@@ -645,3 +676,161 @@ function loadSampleData() {
 
 // Load sample data on first visit for better UX
 loadSampleData();
+
+// ============================================
+// PDF Upload & Text Extraction Functions
+// ============================================
+
+function setupPdfUpload() {
+    const uploadArea = document.getElementById('uploadArea');
+    const pdfInput = document.getElementById('pdfInput');
+    const browsePdfBtn = document.getElementById('browsePdfBtn');
+    const cancelUploadBtn = document.getElementById('cancelUploadBtn');
+    const removePdfBtn = document.getElementById('removePdfBtn');
+    
+    // Click to upload
+    if (browsePdfBtn) {
+        browsePdfBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pdfInput.click();
+        });
+    }
+    
+    if (uploadArea) {
+        uploadArea.addEventListener('click', () => pdfInput.click());
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type === 'application/pdf') {
+                handlePdfFile(files[0]);
+            } else {
+                showToast('Please upload a valid PDF file');
+            }
+        });
+    }
+    
+    // File input change
+    if (pdfInput) {
+        pdfInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handlePdfFile(e.target.files[0]);
+            }
+        });
+    }
+    
+    // Cancel upload
+    if (cancelUploadBtn) {
+        cancelUploadBtn.addEventListener('click', () => {
+            isProcessingPdf = false;
+            resetUploadUI();
+            showToast('Upload cancelled');
+        });
+    }
+    
+    // Remove PDF
+    if (removePdfBtn) {
+        removePdfBtn.addEventListener('click', () => {
+            extractedPdfText = '';
+            resetUploadUI();
+            showToast('PDF removed');
+        });
+    }
+}
+
+async function handlePdfFile(file) {
+    if (isProcessingPdf) return;
+    
+    isProcessingPdf = true;
+    
+    // Show upload status
+    document.getElementById('uploadArea').style.display = 'none';
+    document.getElementById('uploadedPreview').style.display = 'none';
+    document.getElementById('uploadStatus').style.display = 'block';
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('extractProgress').style.width = '10%';
+    document.getElementById('extractStatus').textContent = 'Loading PDF...';
+    
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        
+        document.getElementById('extractProgress').style.width = '30%';
+        document.getElementById('extractStatus').textContent = 'Parsing PDF...';
+        
+        // Load PDF using PDF.js
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        
+        let fullText = '';
+        const totalPages = pdf.numPages;
+        
+        for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+            if (!isProcessingPdf) break;
+            
+            document.getElementById('extractProgress').style.width = `${30 + (pageNum / totalPages) * 50}%`;
+            document.getElementById('extractStatus').textContent = `Extracting page ${pageNum} of ${totalPages}...`;
+            
+            const page = await pdf.getPage(pageNum);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map(item => item.str).join(' ');
+            fullText += pageText + '\n\n';
+        }
+        
+        if (!isProcessingPdf) {
+            resetUploadUI();
+            return;
+        }
+        
+        document.getElementById('extractProgress').style.width = '100%';
+        document.getElementById('extractStatus').textContent = 'Processing complete!';
+        
+        // Clean up the extracted text
+        extractedPdfText = cleanExtractedText(fullText);
+        
+        // Show success state
+        setTimeout(() => {
+            document.getElementById('uploadStatus').style.display = 'none';
+            document.getElementById('uploadedPreview').style.display = 'block';
+            document.getElementById('previewText').textContent = 
+                `Successfully extracted ${extractedPdfText.length} characters from ${file.name}. Click "Generate Flashcards" to create cards from this content.`;
+            elements.textInput.value = extractedPdfText;
+            isProcessingPdf = false;
+            showToast('PDF text extracted successfully!');
+        }, 500);
+        
+    } catch (error) {
+        console.error('Error extracting PDF:', error);
+        isProcessingPdf = false;
+        resetUploadUI();
+        showToast('Error extracting PDF. Please try another file.');
+    }
+}
+
+function cleanExtractedText(text) {
+    // Remove excessive whitespace
+    text = text.replace(/\s+/g, ' ');
+    // Remove common PDF artifacts
+    text = text.replace(/(\d+)\s*(\d+)/g, '$1 $2');
+    // Keep sentence structure
+    text = text.replace(/([.!?])\s*([A-Z])/g, '$1\n$2');
+    return text.trim();
+}
+
+function resetUploadUI() {
+    document.getElementById('uploadStatus').style.display = 'none';
+    document.getElementById('uploadedPreview').style.display = 'none';
+    document.getElementById('uploadArea').style.display = 'block';
+    document.getElementById('extractProgress').style.width = '0%';
+    document.getElementById('pdfInput').value = '';
+}
