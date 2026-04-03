@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashMind - Automated Flashcard Maker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="material-symbols-outlined logo-icon">school</span>
+                <h1>FlashMind</h1>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="themeToggle" title="Toggle Dark Mode">
+                    <span class="material-symbols-outlined">dark_mode</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container">
+        <!-- Input Section -->
+        <section class="input-section card">
+            <h2>Create Flashcards</h2>
+            <div class="input-tabs">
+                <button class="tab-btn active" data-tab="auto">Auto-Generate</button>
+                <button class="tab-btn" data-tab="manual">Manual Entry</button>
+            </div>
+            
+            <!-- Auto Generate Tab -->
+            <div class="tab-content active" id="autoTab">
+                <textarea id="textInput" placeholder="Paste your notes, paragraphs, or topics here...&#10;&#10;Example:&#10;Photosynthesis is the process by which plants convert light energy into chemical energy.&#10;The mitochondria is the powerhouse of the cell.&#10;Water boils at 100 degrees Celsius at sea level."></textarea>
+                <div class="input-hints">
+                    <span class="material-symbols-outlined">lightbulb</span>
+                    <p>Tip: Enter clear statements or facts. The system will automatically create question-answer pairs.</p>
+                </div>
+                <button class="btn btn-primary" id="generateBtn">
+                    <span class="material-symbols-outlined">auto_awesome</span>
+                    Generate Flashcards
+                </button>
+            </div>
+
+            <!-- Manual Entry Tab -->
+            <div class="tab-content" id="manualTab">
+                <div class="manual-input">
+                    <div class="input-group">
+                        <label for="questionInput">Question</label>
+                        <textarea id="questionInput" placeholder="Enter your question..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="answerInput">Answer</label>
+                        <textarea id="answerInput" placeholder="Enter the answer..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" id="addManualBtn">
+                        <span class="material-symbols-outlined">add</span>
+                        Add Flashcard
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search & Controls -->
+        <section class="controls-section">
+            <div class="search-box">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" id="searchInput" placeholder="Search flashcards...">
+            </div>
+            <div class="control-buttons">
+                <button class="btn btn-secondary" id="shuffleBtn" title="Shuffle Cards">
+                    <span class="material-symbols-outlined">shuffle</span>
+                    Shuffle
+                </button>
+                <button class="btn btn-primary" id="studyModeBtn">
+                    <span class="material-symbols-outlined">psychology</span>
+                    Study Mode
+                </button>
+            </div>
+        </section>
+
+        <!-- Stats Bar -->
+        <section class="stats-bar card">
+            <div class="stat-item">
+                <span class="material-symbols-outlined">dashboard</span>
+                <div>
+                    <span class="stat-value" id="totalCards">0</span>
+                    <span class="stat-label">Total Cards</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <span class="material-symbols-outlined">check_circle</span>
+                <div>
+                    <span class="stat-value" id="studiedCards">0</span>
+                    <span class="stat-label">Studied</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <span class="material-symbols-outlined">trending_up</span>
+                <div>
+                    <span class="stat-value" id="progressPercent">0%</span>
+                    <span class="stat-label">Progress</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Flashcards Grid -->
+        <section class="flashcards-section">
+            <h2>Your Flashcards</h2>
+            <div class="flashcards-grid" id="flashcardsGrid">
+                <!-- Flashcards will be dynamically inserted here -->
+            </div>
+            <div class="empty-state" id="emptyState">
+                <span class="material-symbols-outlined">note_add</span>
+                <h3>No flashcards yet</h3>
+                <p>Create your first flashcard by entering text above or adding one manually!</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Study Mode Modal -->
+    <div class="modal" id="studyModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Study Mode</h2>
+                <button class="icon-btn" id="closeStudyBtn">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="study-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="studyProgressFill"></div>
+                </div>
+                <p class="progress-text" id="studyProgressText">Card 1 of 10</p>
+            </div>
+
+            <div class="study-card-container">
+                <div class="study-flashcard" id="studyFlashcard">
+                    <div class="study-card-inner">
+                        <div class="study-card-front">
+                            <span class="card-label">Question</span>
+                            <p class="card-text" id="studyQuestion">Click "Next" to start studying!</p>
+                        </div>
+                        <div class="study-card-back">
+                            <span class="card-label">Answer</span>
+                            <p class="card-text" id="studyAnswer">Your answer will appear here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="study-controls">
+                <button class="btn btn-secondary" id="prevCardBtn" disabled>
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    Previous
+                </button>
+                <button class="btn btn-primary" id="flipCardBtn">
+                    <span class="material-symbols-outlined">flip</span>
+                    Flip Card
+                </button>
+                <button class="btn btn-secondary" id="nextCardBtn">
+                    Next
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+            </div>
+
+            <div class="study-actions">
+                <button class="btn btn-outline" id="markKnownBtn">
+                    <span class="material-symbols-outlined">check</span>
+                    I Know This
+                </button>
+                <button class="btn btn-outline" id="markUnknownBtn">
+                    <span class="material-symbols-outlined">close</span>
+                    Need Practice
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Edit Flashcard</h2>
+                <button class="icon-btn" id="closeEditBtn">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="edit-form">
+                <div class="input-group">
+                    <label for="editQuestion">Question</label>
+                    <textarea id="editQuestion"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="editAnswer">Answer</label>
+                    <textarea id="editAnswer"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+                    <button class="btn btn-primary" id="saveEditBtn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span class="material-symbols-outlined">check</span>
+        <span class="toast-message">Action completed!</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
